@@ -134,7 +134,7 @@ if (form && status) {
     rows.forEach(([ok, label]) => {
       const item = document.createElement("li");
       item.className = ok ? "is-ok" : "is-no";
-      item.textContent = (ok ? "✔ " : "✖ ") + label;
+      item.textContent = label;
       gate.list.append(item);
     });
     gate.text.textContent = state.message;
