@@ -75,3 +75,15 @@
 .staff-role-btn{margin:0;cursor:pointer;font:inherit}
 .staff-role-btn.is-active{outline:3px solid #fff4d9;outline-offset:3px}
 .staff-pick-note{margin:0 0 12px!important;text-align:center}
+
+/* Discord login and the checks above the application form */
+.apply-gate { margin: 1rem 0 1.4rem; }
+.apply-gate-list { list-style: none; margin: .6rem 0; padding: 0; display: grid; gap: .35rem; }
+.apply-gate-list li { padding: .45rem .7rem; border-radius: 10px; background: rgba(255, 255, 255, .55); }
+.apply-gate-list li.is-ok { color: #3f6b3a; }
+.apply-gate-list li.is-no { color: #9a3d4a; font-weight: 600; }
+.apply-gate-help { margin: .4rem 0; font-size: .95em; }
+.apply-gate-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; margin: .8rem 0 0; }
+.apply-gate-button { display: inline-block; text-decoration: none; text-align: center; }
+.apply-gate-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.staff-form input[readonly] { background: rgba(255, 255, 255, .5); cursor: not-allowed; }

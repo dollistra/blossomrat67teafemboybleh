@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, deleteDoc, doc, getDocs, getFirestore, orderBy, query, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const REVIEWER_EMAIL = "blossomvale0@gmail.com";
@@ -220,6 +220,52 @@ document.getElementById("reload-applications").addEventListener("click", loadApp
 roleFilter.addEventListener("change", renderApplications);
 statusFilter.addEventListener("change", renderApplications);
 
+// The switch for new applications: a public document the Discord bot reads (siteConfig/applications, open: true or false). Closing it stops the form at the bot, not only here.
+const switchStatus = document.getElementById("apps-switch-status");
+const switchToggle = document.getElementById("apps-switch-toggle");
+const switchRef = doc(db, "siteConfig", "applications");
+let applicationsOpen = true;
+let confirmTimer = null;
+
+function showSwitch() {
+  switchStatus.textContent = applicationsOpen ? "Applications are OPEN. People who meet the requirements can apply." : "Applications are CLOSED. Nobody can send a new application.";
+  switchToggle.textContent = applicationsOpen ? "Close applications" : "Open applications";
+  switchToggle.disabled = false;
+}
+
+async function loadSwitch() {
+  switchToggle.disabled = true;
+  try {
+    const snapshot = await getDoc(switchRef);
+    applicationsOpen = !snapshot.exists() || snapshot.data().open !== false;
+    showSwitch();
+  } catch (error) {
+    console.error("Could not read the applications switch", error);
+    switchStatus.textContent = "Could not read whether applications are open. Try Refresh.";
+  }
+}
+
+switchToggle.addEventListener("click", async () => {
+  if (confirmTimer === null) {
+    switchToggle.textContent = applicationsOpen ? "Click again to close" : "Click again to open";
+    confirmTimer = setTimeout(() => { confirmTimer = null; showSwitch(); }, 4000);
+    return;
+  }
+  clearTimeout(confirmTimer);
+  confirmTimer = null;
+  switchToggle.disabled = true;
+  try {
+    await setDoc(switchRef, { open: !applicationsOpen, updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || "" });
+    applicationsOpen = !applicationsOpen;
+    showSwitch();
+    switchStatus.textContent += " (The bot notices within about 20 seconds.)";
+  } catch (error) {
+    console.error("Could not change the applications switch", error);
+    switchStatus.textContent = "Could not change it. Check that you are signed in as the reviewer account.";
+    switchToggle.disabled = false;
+  }
+});
+
 async function applyAuthState(user) {
   // Ignore a delayed initial auth callback if a sign-in has already completed.
   if (!user && auth.currentUser) user = auth.currentUser;
@@ -256,6 +302,7 @@ async function applyAuthState(user) {
   reviewSection.hidden = false;
   if (loadedReviewerUid !== user.uid) {
     loadedReviewerUid = user.uid;
+    loadSwitch();
     await loadApplications();
   }
 }

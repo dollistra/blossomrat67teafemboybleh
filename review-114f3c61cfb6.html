@@ -10,7 +10,7 @@
   </script>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#e58fc4">
   <link rel="icon" href="./favicon.ico" sizes="any"><link rel="stylesheet" href="./styles.css?v=11"><link rel="stylesheet" href="./wiki.css?v=5"><link rel="stylesheet" href="./apps.css?v=3">
-  <script type="module" src="./apps-admin.js?v=4"></script>
+  <script type="module" src="./apps-admin.js?v=5"></script>
   <title>Review Applications | Blossom Vale</title><meta name="robots" content="noindex,nofollow"><link rel="canonical" href="https://blossomvale.world/review-114f3c61cfb6">
 </head>
 <body>
@@ -30,6 +30,7 @@
         <p id="reviewer-auth-status" class="apps-status" role="status" aria-live="polite">Only the verified blossomvale0@gmail.com account can access application records.</p>
       </div><div class="board-bottom" aria-hidden="true"></div></section>
       <section id="application-review" class="application-review" hidden aria-label="Applications">
+        <div class="review-switch" id="applications-switch"><div><h2>New applications</h2><p id="apps-switch-status" role="status" aria-live="polite">Checking…</p></div><button id="apps-switch-toggle" class="apps-button" type="button" disabled>…</button></div>
         <div class="review-toolbar"><div><h2>Applications</h2><p id="reviewer-account"></p></div><div class="review-filters"><label>Role <select id="filter-role"><option value="all">All roles</option><option value="helper">Helper</option><option value="creator">Content Creator</option></select></label><label>Status <select id="filter-status"><option value="all">All statuses</option><option>New</option><option>Reviewing</option><option>Accepted</option><option>Declined</option></select></label><button id="reload-applications" class="apps-button apps-button-small" type="button">Refresh</button></div></div>
         <p id="applications-status" class="apps-status" role="status" aria-live="polite"></p><div id="application-list" class="application-list"></div>
       </section>

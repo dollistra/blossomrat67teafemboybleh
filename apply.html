@@ -27,7 +27,7 @@
   <script src="./blossoms.js?v=4" defer></script>
   <script src="./script.js?v=8" defer></script>
   <script src="./board.js?v=4" defer></script>
-  <script type="module" src="./staff-application.js?v=24"></script>
+  <script type="module" src="./staff-application.js?v=25"></script>
 </head>
 <body>
   <div class="ambient-petals" aria-hidden="true">
@@ -147,7 +147,14 @@
           <h2 class="panel-title" id="application-heading">Staff Application</h2>
           <p class="staff-form-intro">Please answer in your own words. A few questions will change depending on the role you choose. You don’t need previous staff experience to apply, but please tell us about any experience you do have.</p>
 
-          <form id="staff-application-form" class="staff-form">
+          <div id="apply-gate" class="apply-gate" aria-live="polite">
+            <p id="apply-gate-text" class="staff-form-intro">Checking if you can apply…</p>
+            <ul id="apply-gate-list" class="apply-gate-list" hidden></ul>
+            <p class="apply-gate-help" id="apply-gate-help" hidden></p>
+            <p class="apply-gate-buttons"><a id="apply-login" class="staff-submit apply-gate-button" href="#" hidden>Log in with Discord</a><button id="apply-logout" class="apply-gate-link" type="button" hidden>Log out</button></p>
+          </div>
+
+          <form id="staff-application-form" class="staff-form" hidden>
             <div class="staff-field" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">
               <label for="app-website">Leave this field empty</label>
               <input id="app-website" name="website" tabindex="-1" autocomplete="off">
@@ -160,7 +167,7 @@
               <div class="staff-field">
                 <label for="app-discord">Discord User ID <span>(required)</span></label>
                 <input id="app-discord" name="discordId" autocomplete="off" inputmode="numeric" pattern="[0-9]{17,20}" maxlength="20" placeholder="Your 17–20 digit ID" aria-describedby="discord-id-help" required>
-                <p class="staff-field-hint" id="discord-id-help">Enable Developer Mode in Discord, then right-click your profile and choose <strong>Copy User ID</strong>. Please send the ID, not your username.</p>
+                <p class="staff-field-hint" id="discord-id-help">This comes from your Discord login, so it is always correct.</p>
               </div>
               <div class="staff-field">
                 <label for="app-role">Which team role interests you? <span>(required)</span></label>
