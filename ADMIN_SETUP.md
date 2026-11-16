@@ -56,3 +56,22 @@ firebase deploy --only hosting
 ```
 
 Firestore still supplies the live server status and supports the legacy reviewer panel. The public application form no longer calls or requires the Firebase Cloud Function, so do not deploy `submitStaffApplication` for new applications. Firebase web app settings in `firebase-config.js` are public configuration, not credentials.
+
+## Staff applications now go through the Discord bot (updated 17 Nov 2026)
+
+The application form no longer posts to a Discord webhook. It logs the applicant in with Discord and sends the application to the Blossomvale Discord bot (hosted on Render, address in `staff-application-config.js`), which checks:
+
+- applications are open (see "Close applications" below),
+- the person is in the Discord server and is Discord level 15 or higher,
+- they do not have the blocked role (role ID `1570910004549259455`; set `APPLICATION_BLOCKED_ROLE_ID` on the bot to change it),
+- their Minecraft account is linked (`/link` in the game, then `/link <code>` in Discord) and they are in-game level 15 or higher,
+
+and then posts the application in the staff channel (`APPLICATIONS_CHANNEL_ID` on the bot). Change the minimum with `APPLICATION_MIN_LEVEL`. The old webhook that was in `staff-application-config.js` is not used any more: delete it in Discord (it was visible in this repository).
+
+### Close or open applications
+
+Sign in to the review panel (`/review-114f3c61cfb6`). At the top is "New applications" with a **Close applications** / **Open applications** button (click twice to confirm). It writes `siteConfig/applications` (`open: true/false`) in Firestore; the bot reads it every 20 seconds, so a closed switch stops applications at the bot, not only on the page. Publish the rules for it with:
+
+```powershell
+firebase deploy --only firestore:rules,hosting
+```

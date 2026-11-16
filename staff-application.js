@@ -3,7 +3,7 @@ import { staffApplicationConfig } from "./staff-application-config.js";
 const form = document.getElementById("staff-application-form");
 const status = document.getElementById("staff-form-status");
 if (form && status) {
-  const webhookUrl = staffApplicationConfig.webhookUrl;
+  const apiBase = String(staffApplicationConfig.apiBase || "").replace(/\/$/, "");
   const roleSelect = document.getElementById("app-role");
   const roleSections = [...form.querySelectorAll("[data-role-questions]")];
   const submitButton = form.querySelector(".staff-submit");
@@ -87,34 +87,117 @@ if (form && status) {
       .join("\n\n");
   }
 
-  function discordEmbedValue(text) {
-    return String(text).replace(/[\\*_`~|>]/g, "\\$&").slice(0, 256);
+  // the answers in reading order, for the bot to put in the staff message
+  function applicationAnswers(application) {
+    const common = ["name", "discordId", "minecraft", "age", "availability", "experience", "reason", "extra"];
+    const roleFields = application.role === "helper"
+      ? ["helperTenure", "helperRole", "helperLand", "helperRanks", "helperReport", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordChannels", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
+      : ["platforms", "audience", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
+    const answers = [...common, ...roleFields].filter((key) => application[key]).map((key) => ({ label: applicationLabels[key], value: String(application[key]) }));
+    if (application.requirementsConfirmed) answers.push({ label: "Requirements", value: "They confirmed they read the guidelines, meet the requirements and wrote their answers without AI." });
+    return answers;
   }
 
-  function makeDiscordPayload(application) {
-    const creator = application.role === "creator";
-    const embed = {
-      title: creator ? "Content Creator application" : "Helper application",
-      color: creator ? 0xB8D7F0 : 0xEFB6D9,
-      fields: [
-        { name: "Applicant", value: discordEmbedValue(application.name), inline: true },
-        { name: "Discord User ID", value: application.discordId, inline: true },
-        { name: "Minecraft username", value: discordEmbedValue(application.minecraft), inline: true }
-      ],
-      footer: { text: "Blossom Vale • Staff applications" },
-      timestamp: new Date().toISOString()
-    };
-    if (application.experienceProofCount) embed.fields.push({ name: "Experience proof", value: String(application.experienceProofCount) + " screenshot(s) attached", inline: true });
-    if (creator) {
-      embed.fields.push({ name: "Channel", value: discordEmbedValue(application.contentLink).slice(0, 1024) });
-      embed.image = { url: "attachment://creator-proof.webp" };
-    }
-    return {
-      username: "Blossom Vale Applications",
-      embeds: [embed],
-      allowed_mentions: { parse: [] }
-    };
+  const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
+  // ---------------------------------------------------------------- Discord login and the checks (the bot decides; this only shows the result)
+  const SESSION_KEY = "bv-apply-session";
+  const gate = {
+    text: document.getElementById("apply-gate-text"), list: document.getElementById("apply-gate-list"), help: document.getElementById("apply-gate-help"),
+    login: document.getElementById("apply-login"), logout: document.getElementById("apply-logout")
+  };
+  let session = "";
+  let eligible = false;
+  try { session = sessionStorage.getItem(SESSION_KEY) || ""; } catch { session = ""; }
+  const fragment = new URLSearchParams(window.location.hash.slice(1));
+  if (fragment.get("session")) {
+    session = fragment.get("session");
+    try { sessionStorage.setItem(SESSION_KEY, session); } catch { /* private mode: the login lasts until this page closes */ }
   }
+  const loginError = fragment.get("error");
+  if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
+  const clearSession = () => { session = ""; try { sessionStorage.removeItem(SESSION_KEY); } catch { /* nothing to clear */ } };
+  const loginUrl = () => apiBase + "/apply/login?return=" + encodeURIComponent(window.location.pathname + window.location.search);
+
+  function renderGate(state) {
+    gate.list.replaceChildren();
+    gate.help.hidden = true;
+    gate.login.hidden = true;
+    gate.logout.hidden = !session;
+    const rows = state.checks || [];
+    gate.list.hidden = rows.length === 0;
+    rows.forEach(([ok, label]) => {
+      const item = document.createElement("li");
+      item.className = ok ? "is-ok" : "is-no";
+      item.textContent = (ok ? "✔ " : "✖ ") + label;
+      gate.list.append(item);
+    });
+    gate.text.textContent = state.message;
+    if (state.help) { gate.help.textContent = state.help; gate.help.hidden = false; }
+    if (state.needsLogin) { gate.login.href = loginUrl(); gate.login.hidden = false; }
+  }
+
+  async function startGate() {
+    eligible = false;
+    form.hidden = true;
+    if (!apiBase) { renderGate({ message: "Applications are not available right now. Please try again later." }); return; }
+    if (loginError && !session) {
+      renderGate({ message: loginError === "denied" ? "You cancelled the Discord login. You need to log in to apply." : "The Discord login did not work. Please try again.", needsLogin: true });
+      return;
+    }
+    if (!session) {
+      let open = true;
+      try { open = (await (await fetch(apiBase + "/apply/open")).json()).open !== false; } catch { /* the bot may be waking up */ }
+      renderGate(open
+        ? { message: "To apply, log in with Discord. We check that you are in the server, that you are level 15 in Discord and in the game, and that your Minecraft account is linked.", needsLogin: true }
+        : { message: "Applications are closed right now. Please check again later." });
+      return;
+    }
+    renderGate({ message: "Checking your account…" });
+    let state;
+    try {
+      const response = await fetch(apiBase + "/apply/status", { headers: { Authorization: "Bearer " + session } });
+      if (response.status === 401) { clearSession(); renderGate({ message: "Your login ran out. Please log in with Discord again.", needsLogin: true }); return; }
+      if (!response.ok) throw new Error("status " + response.status);
+      state = await response.json();
+    } catch {
+      renderGate({ message: "We could not check your account just now. The service may be waking up: please reload this page in a minute.", help: "If this keeps happening, email hello@blossomvale.world." });
+      return;
+    }
+    const min = state.minLevel;
+    const checks = [
+      [state.open, "Applications are open"],
+      [state.inServer, "You are in the Blossomvale Discord server"],
+      [(state.serverLevel || 0) >= min, "Discord level " + min + " or higher (you are level " + (state.serverLevel || 0) + ")"],
+      [Boolean(state.linked), state.linked ? "Minecraft account linked: " + state.linked.name : "Minecraft account linked"],
+      [state.gameLevel !== null && state.gameLevel >= min, "In-game level " + min + " or higher" + (state.gameLevel === null ? "" : " (you are level " + state.gameLevel + ")")]
+    ];
+    if (state.blocked) checks.push([false, "You are not able to apply right now"]);
+    if (state.eligible) {
+      eligible = true;
+      renderGate({ message: "You are logged in as " + state.discord.name + " and can apply. ✿", checks });
+      form.hidden = false;
+      const discordField = document.getElementById("app-discord");
+      const minecraftField = document.getElementById("app-minecraft");
+      const nameField = document.getElementById("app-name");
+      discordField.value = state.discord.id; discordField.readOnly = true;
+      minecraftField.value = state.linked.name; minecraftField.readOnly = true;
+      if (!nameField.value) nameField.value = state.discord.name;
+      return;
+    }
+    renderGate({
+      message: state.open ? "You cannot apply yet. Here is what is missing:" : "Applications are closed right now. Please check again later.",
+      checks,
+      help: state.linked ? "" : "To link your Minecraft account: type /link in the game, then type /link in the Discord server and paste the code."
+    });
+  }
+  gate.logout.addEventListener("click", () => { clearSession(); startGate(); });
+  startGate();
 
   async function compressProof(file) {
     const bitmap = await createImageBitmap(file);
@@ -159,6 +242,7 @@ if (form && status) {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (!eligible || !session) { status.textContent = "Please log in with Discord first."; return; }
     if (!form.reportValidity()) return;
 
     const ageInput = document.getElementById("app-age");
@@ -260,29 +344,26 @@ if (form && status) {
     }
 
     submitButton.disabled = true;
-    status.textContent = "Sending your application to Discord…";
+    status.textContent = "Sending your application…";
     try {
-      if (!webhookUrl) throw new Error("The application webhook is not configured.");
       const payload = { ...application };
       const proof = payload.proof;
       delete payload.proof;
-      const requestBody = new FormData();
-      requestBody.append("payload_json", JSON.stringify(makeDiscordPayload(payload)));
-      requestBody.append(
-        "files[0]",
-        new Blob([applicationText(payload)], { type: "text/plain;charset=utf-8" }),
-        `blossom-vale-${payload.role}-application.txt`
-      );
-      if (proof) requestBody.append("files[1]", proof, "creator-proof.webp");
-      proofImages.forEach((image, index) => requestBody.append("files[" + (2 + index) + "]", image, "experience-proof-" + (index + 1) + ".webp"));
-      const response = await fetch(webhookUrl, { method: "POST", body: requestBody, mode: "no-cors" });
-      if (response.type !== "opaque" && !response.ok) throw new Error("Application submission failed.");
+      const blobs = [...(proof ? [proof] : []), ...proofImages];
+      const body = { role: payload.role, answers: applicationAnswers(payload), files: await Promise.all(blobs.map(async (blob) => ({ type: blob.type || "image/webp", data: await blobToBase64(blob) }))) };
+      const response = await fetch(apiBase + "/apply/submit", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + session }, body: JSON.stringify(body) });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 401) { clearSession(); startGate(); throw new Error(result.error || "Please log in with Discord again."); }
+      if (!response.ok) throw new Error(result.error || "Application submission failed.");
       form.reset();
       updateRoleQuestions();
+      form.hidden = true;
+      eligible = false;
+      renderGate({ message: "Your application has been submitted. Thank you! ✿ The Blossom Vale team will review it and contact you on Discord." });
       status.textContent = "Your application has been submitted. Thank you! The Blossom Vale team will review it and contact you on Discord.";
     } catch (error) {
       console.error("Application submission failed", error);
-      status.textContent = "We couldn’t submit your application just now. Please try again later or email hello@blossomvale.world.";
+      status.textContent = error.message && !/^Failed to fetch|NetworkError/.test(error.message) ? error.message : "We couldn’t submit your application just now. Please try again later or email hello@blossomvale.world.";
     } finally {
       submitButton.disabled = false;
     }

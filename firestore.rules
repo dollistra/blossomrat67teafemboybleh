@@ -13,6 +13,16 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    // Open or closed for new applications: anyone (the bot) may read it, only the reviewer may change it.
+    match /siteConfig/applications {
+      allow read: if true;
+      allow write: if isApplicationReviewer()
+        && request.resource.data.keys().hasOnly(['open', 'updatedAt', 'updatedBy'])
+        && request.resource.data.open is bool
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy is string;
+    }
+
     match /staffApplications/{applicationId} {
       // Public submissions must go through submitStaffApplication so the server can rate-limit them.
       allow create: if false;
