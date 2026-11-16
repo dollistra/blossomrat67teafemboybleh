@@ -6,7 +6,12 @@
   "functions": {
     "source": "functions",
     "runtime": "nodejs22",
-    "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log"
+    ]
   },
   "hosting": {
     "public": ".",
@@ -23,7 +28,13 @@
       "functions/**",
       "staff-applications-worker/**",
       "**/node_modules/**",
-      "**/.*"
+      "**/.*",
+      "**/*.bat",
+      "**/*.ps1",
+      "**/*.cmd",
+      "**/*.sh",
+      "**/*.exe",
+      "**/*.cjs"
     ],
     "cleanUrls": true,
     "trailingSlash": false
