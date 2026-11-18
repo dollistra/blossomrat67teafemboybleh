@@ -160,7 +160,7 @@ document.addEventListener('toggle',(e)=>{ if(e.target.classList&&e.target.classL
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = input.value.trim();
-      if (!NAME.test(name)) { note.textContent = "Java names are 3 to 16 letters, numbers or underscores. Bedrock players: use your Java name if you have one, or try Willow to see the look."; return; }
+      if (!NAME.test(name)) { note.textContent = "Names are 3 to 16 letters, numbers or underscores. Try Willow to see the look."; return; }
       d.querySelectorAll("[data-name]").forEach((n) => {
         const star = n.querySelector(".cp-star");
         n.textContent = "";

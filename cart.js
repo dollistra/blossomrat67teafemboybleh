@@ -15,7 +15,7 @@
   const ALL_PRODUCTS = [...Object.values(IDS), ...Object.values(PRODUCTS)];
   const OLD_UPGRADES = {"7796380": IDS.blossom, "7796381": IDS.bloom, "7796384": IDS.bloom, "7796385": IDS.everbloom, "7796387": IDS.everbloom, "7796388": IDS.everbloom};
   const KEY = "bv_cart_v1";
-  const NAME_OK = /^\.?[A-Za-z0-9_ ]{3,16}$/;       // Java names, or Bedrock names with the leading dot
+  const NAME_OK = /^[A-Za-z0-9_]{3,16}$/;       // Java names
   let catalog = {}, catalogOk = false, catalogError = false, cart = [], basket = null, migrated = false;
 
   const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || "[]"); if (!Array.isArray(v)) return []; return [...new Set(v.map(String).map((x) => { if (OLD_UPGRADES[x]) { migrated = true; return OLD_UPGRADES[x]; } return x; }).filter((x) => ALL_PRODUCTS.includes(x)))]; } catch (e) { return []; } };
@@ -90,9 +90,9 @@
     const couponLab = el("label", "", "Discount code (optional)"); couponLab.htmlFor = "cart-coupon";
     const coupon = el("input"); coupon.id = "cart-coupon"; coupon.name = "coupon"; coupon.autocomplete = "off"; coupon.maxLength = 64; coupon.placeholder = "Enter a Tebex code";
     const lab = el("label", "", "Minecraft name"); lab.htmlFor = "cart-name";
-    const inp = el("input"); inp.id = "cart-name"; inp.name = "mcname"; inp.autocomplete = "off"; inp.maxLength = 17; inp.placeholder = "Java name, or .Name on Bedrock"; inp.required = true;
+    const inp = el("input"); inp.id = "cart-name"; inp.name = "mcname"; inp.autocomplete = "off"; inp.maxLength = 16; inp.placeholder = "Your Java name"; inp.required = true;
     try { inp.value = localStorage.getItem("bv_mcname") || ""; } catch (e) { /* ignore */ }
-    const note = el("p", "cart-fine", "Enter the Minecraft account that should receive your items. Bedrock players: put a dot in front, like .Willow. Check the spelling before checkout.");
+    const note = el("p", "cart-fine", "Enter the Minecraft account that should receive your items. Check the spelling before checkout.");
     const err = msg("", true); err.hidden = true;
     const go = btn("Continue to checkout", null, "primary"); go.type = "submit"; go.disabled = rankCount > 1 || !catalogOk || cart.some((id) => !catalog[id]);
     form.append(couponLab, coupon, lab, inp, note, err, go);
@@ -100,7 +100,7 @@
       e.preventDefault();
       if (cart.filter((id) => Object.values(IDS).includes(id)).length > 1) return;
       const name = inp.value.trim();
-      if (!NAME_OK.test(name)) { err.textContent = "Names are 3 to 16 letters, numbers or underscores. Bedrock names start with a dot."; err.hidden = false; return; }
+      if (!NAME_OK.test(name)) { err.textContent = "Names are 3 to 16 letters, numbers or underscores."; err.hidden = false; return; }
       err.hidden = true; go.disabled = true; go.textContent = "Creating your basket...";
       try { localStorage.setItem("bv_mcname", name); } catch (x) { /* ignore */ }
       try { await createBasket(name, coupon.value.trim()); render(); }
