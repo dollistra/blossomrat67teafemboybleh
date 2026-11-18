@@ -1,39 +1,11 @@
-rules_version = '2';
+﻿rules_version = '2';
 
+// Visitors can only read the live server numbers. Applications are handled by the Discord bot (with a Discord login), never by this database.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /siteConfig/serverStats {
       allow read: if true;
       allow write: if false;
-    }
-
-    function isApplicationReviewer() {
-      return request.auth != null
-        && request.auth.token.email == 'blossomvale0@gmail.com'
-        && request.auth.token.email_verified == true;
-    }
-
-    // Open or closed for new applications: anyone (the bot) may read it, only the reviewer may change it.
-    match /siteConfig/applications {
-      allow read: if true;
-      allow write: if isApplicationReviewer()
-        && request.resource.data.keys().hasOnly(['open', 'updatedAt', 'updatedBy'])
-        && request.resource.data.open is bool
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.updatedBy is string;
-    }
-
-    match /staffApplications/{applicationId} {
-      // Public submissions must go through submitStaffApplication so the server can rate-limit them.
-      allow create: if false;
-      allow read: if isApplicationReviewer();
-      allow update: if isApplicationReviewer()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewerNotes', 'updatedAt'])
-        && request.resource.data.status in ['New', 'Reviewing', 'Accepted', 'Declined']
-        && request.resource.data.reviewerNotes is string
-        && request.resource.data.reviewerNotes.size() <= 2000
-        && request.resource.data.updatedAt == request.time;
-      allow delete: if isApplicationReviewer();
     }
 
     match /{document=**} {

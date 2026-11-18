@@ -1,16 +1,11 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, sendEmailVerification, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js";
+// The application review page. It signs in with Discord (through the Blossomvale bot) and the bot decides who may see anything:
+// only people who can decide applications in Discord (the staff manager, management and admins). There is no password and no Firebase here.
+// Everything from applicants is put on the page as plain text, never as HTML.
+import { staffApplicationConfig } from "./staff-application-config.js";
 
-const REVIEWER_EMAIL = "blossomvale0@gmail.com";
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const passwordForm = document.getElementById("reviewer-password-form");
-const usernameInput = document.getElementById("reviewer-username");
-const passwordInput = document.getElementById("reviewer-password");
-const resendVerificationButton = document.getElementById("reviewer-resend-verification");
+const apiBase = (staffApplicationConfig.apiBase || "").replace(/\/$/, "");
+const SESSION_KEY = "bv-admin-session";
+const loginLink = document.getElementById("reviewer-login");
 const signOutButton = document.getElementById("reviewer-sign-out");
 const authStatus = document.getElementById("reviewer-auth-status");
 const reviewSection = document.getElementById("application-review");
@@ -19,8 +14,12 @@ const appList = document.getElementById("application-list");
 const appStatus = document.getElementById("applications-status");
 const roleFilter = document.getElementById("filter-role");
 const statusFilter = document.getElementById("filter-status");
+const switchStatus = document.getElementById("apps-switch-status");
+const switchToggle = document.getElementById("apps-switch-toggle");
 let applications = [];
-let loadedReviewerUid = null;
+let applicationsOpen = true;
+let confirmTimer = null;
+let session = "";
 
 const el = (tag, className, text) => {
   const node = document.createElement(tag);
@@ -29,124 +28,60 @@ const el = (tag, className, text) => {
   return node;
 };
 
-function safeHttpUrl(raw) {
-  try {
-    const url = new URL(raw);
-    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
-  } catch {
-    return "";
-  }
+// ---------------------------------------------------------------- the Discord login (the bot sends the session back in the address after #)
+try { session = sessionStorage.getItem(SESSION_KEY) || ""; } catch { session = ""; }
+const fragment = new URLSearchParams(window.location.hash.slice(1));
+if (fragment.get("session")) {
+  session = fragment.get("session");
+  try { sessionStorage.setItem(SESSION_KEY, session); } catch { /* private mode: the login lasts until this page closes */ }
+}
+const loginError = fragment.get("error");
+if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
+const clearSession = () => { session = ""; try { sessionStorage.removeItem(SESSION_KEY); } catch { /* nothing to clear */ } };
+loginLink.href = apiBase + "/apply/login?return=" + encodeURIComponent(window.location.pathname);
+
+async function call(path, options = {}) {
+  const response = await fetch(apiBase + path, {
+    ...options,
+    headers: { Authorization: "Bearer " + session, ...(options.body ? { "Content-Type": "application/json" } : {}) }
+  });
+  const data = await response.json().catch(() => ({}));
+  return { status: response.status, ok: response.ok, data };
 }
 
-function addDetail(list, label, content, link = false) {
-  const dt = el("dt", "", label);
-  const dd = el("dd");
-  if (link) {
-    const href = safeHttpUrl(content);
-    if (href) {
-      const anchor = el("a", "", content);
-      anchor.href = href;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      dd.append(anchor);
-    } else dd.textContent = content || "—";
-  } else dd.textContent = content || "—";
-  list.append(dt, dd);
+function showLoggedOut(message) {
+  reviewSection.hidden = true;
+  loginLink.hidden = false;
+  signOutButton.hidden = true;
+  authStatus.textContent = message;
 }
 
-function readableDate(timestamp) {
-  const date = timestamp?.toDate?.();
-  return date ? date.toLocaleString() : "Just submitted";
+// ---------------------------------------------------------------- applications
+function addDetail(list, label, content) {
+  list.append(el("dt", "", label), el("dd", "", content || "—"));
+}
+
+function readableDate(ms) {
+  return Number.isFinite(ms) ? new Date(ms).toLocaleString() : "Unknown";
 }
 
 function makeApplicationCard(application) {
   const card = el("article", "review-card");
   const header = el("div", "review-card-header");
   const identity = el("div");
-  identity.append(el("h3", "", application.name || "Applicant"));
-  identity.append(el("p", "review-card-meta", `${application.role === "creator" ? "Content Creator" : "Helper"} · Submitted ${readableDate(application.createdAt)} · Discord ID ${application.discordId || "—"}`));
+  identity.append(el("h3", "", application.discordName || "Applicant"));
+  identity.append(el("p", "review-card-meta", `${application.role === "creator" ? "Content Creator" : "Helper"} · Submitted ${readableDate(application.at)} · Discord ID ${application.discordId || "—"}`));
   header.append(identity);
+  const status = application.status || "New";
+  header.append(el("span", `review-status review-status-${status.toLowerCase()}`, status));
   const dl = el("dl");
   addDetail(dl, "Minecraft username", application.minecraft);
-  addDetail(dl, "Time zone / availability", application.availability);
-  addDetail(dl, "Relevant experience", application.experience || "Not provided");
-  addDetail(dl, "Why they want to join", application.reason);
-
-  const roleFields = application.role === "helper"
-    ? [["Conflict of interest / damaged build", "helper"], ["Helping during busy chat", "helperIssue"], ["Arguments and private details", "helperBoundaries"], ["Requests outside permissions", "helperLimits"], ["Owning and correcting a mistake", "helperMistake"]]
-    : [["Content, platforms, and audience", "platforms"], ["Channel link", "contentLink"]];
-  for (const [label, field] of roleFields) addDetail(dl, label, application[field], field === "contentLink");
+  addDetail(dl, "Levels", `Discord ${application.serverLevel ?? "?"} · In-game ${application.gameLevel ?? "?"}`);
+  for (const answer of Array.isArray(application.answers) ? application.answers : []) addDetail(dl, String(answer.label || ""), String(answer.value || ""));
+  if (application.screenshots) addDetail(dl, "Screenshots", `${application.screenshots} attached to the application post in Discord`);
+  if (application.decidedBy) addDetail(dl, status, `Decided in Discord by ${application.decidedBy}${application.decidedAt ? ` on ${readableDate(application.decidedAt)}` : ""}${application.reason ? `. ${application.reason}` : ""}`);
   card.append(header, dl);
-
-  if (application.role === "creator" && application.proofDataUrl) {
-    const proofLabel = el("p", "review-card-meta", `Creator proof screenshot · ${application.proofFileName || "screenshot"}`);
-    const image = document.createElement("img");
-    image.className = "review-proof";
-    image.src = application.proofDataUrl;
-    image.alt = "Creator-provided channel ownership screenshot";
-    image.loading = "lazy";
-    const download = el("a", "", "Download screenshot");
-    download.href = application.proofDataUrl;
-    download.download = application.proofFileName || "creator-proof.webp";
-    card.append(proofLabel, image, download);
-  }
-
-  const actions = el("div", "review-actions");
-  const stateLabel = el("label", "", "Review status");
-  const select = document.createElement("select");
-  for (const state of ["New", "Reviewing", "Accepted", "Declined"]) {
-    const option = el("option", "", state);
-    option.value = state;
-    option.selected = (application.status || "New") === state;
-    select.append(option);
-  }
-  stateLabel.append(select);
-  const notesLabel = el("label", "", "Private reviewer notes");
-  const notes = document.createElement("textarea");
-  notes.maxLength = 2000;
-  notes.value = application.reviewerNotes || "";
-  notes.placeholder = "Optional notes for the review team";
-  notesLabel.append(notes);
-  const save = el("button", "apps-button apps-button-small", "Save review");
-  save.type = "button";
-  save.addEventListener("click", async () => {
-    save.disabled = true;
-    try {
-      await updateDoc(doc(db, "staffApplications", application.id), {
-        status: select.value,
-        reviewerNotes: notes.value.trim(),
-        updatedAt: serverTimestamp()
-      });
-      application.status = select.value;
-      application.reviewerNotes = notes.value.trim();
-      appStatus.textContent = "Review saved.";
-      renderApplications();
-    } catch (error) {
-      console.error("Could not save review", error);
-      appStatus.textContent = "Could not save the review. Please refresh and try again.";
-    } finally {
-      save.disabled = false;
-    }
-  });
-  const remove = el("button", "review-delete", "Delete");
-  remove.type = "button";
-  remove.setAttribute("aria-label", `Delete application from ${application.name || "applicant"}`);
-  remove.addEventListener("click", async () => {
-    if (!window.confirm(`Permanently delete ${application.name || "this"} application?`)) return;
-    remove.disabled = true;
-    try {
-      await deleteDoc(doc(db, "staffApplications", application.id));
-      applications = applications.filter((item) => item.id !== application.id);
-      appStatus.textContent = "Application deleted.";
-      renderApplications();
-    } catch (error) {
-      console.error("Could not delete application", error);
-      appStatus.textContent = "Could not delete the application. Please refresh and try again.";
-      remove.disabled = false;
-    }
-  });
-  actions.append(stateLabel, notesLabel, save, remove);
-  card.append(actions);
+  card.append(el("p", "review-card-meta", "To accept or decline, use the buttons under the application post in Discord. The applicant gets a message from the bot."));
   return card;
 }
 
@@ -162,87 +97,32 @@ function renderApplications() {
   filtered.forEach((application) => appList.append(makeApplicationCard(application)));
 }
 
-async function loadApplications() {
-  appStatus.textContent = "Loading applications…";
-  try {
-    const snapshot = await getDocs(query(collection(db, "staffApplications"), orderBy("createdAt", "desc")));
-    applications = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
-    appStatus.textContent = `${applications.length} application${applications.length === 1 ? "" : "s"}.`;
-    renderApplications();
-  } catch (error) {
-    console.error("Could not load applications", error);
-    appStatus.textContent = "Could not load applications. Check the Firebase rules and Firestore setup.";
-  }
-}
-
-passwordForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (usernameInput.value.trim().toLowerCase() !== "blossomvale") {
-    authStatus.textContent = "That username isn’t recognized.";
-    return;
-  }
-  const password = passwordInput.value;
-  if (!password) return;
-  authStatus.textContent = "Signing in…";
-  const submitButton = passwordForm.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  try {
-    const credential = await signInWithEmailAndPassword(auth, REVIEWER_EMAIL, password);
-    passwordInput.value = "";
-    await applyAuthState(credential.user);
-  } catch (error) {
-    console.error("Password sign-in failed", error);
-    authStatus.textContent = error.code === "auth/operation-not-allowed"
-      ? "Email/password sign-in must be enabled in Firebase Authentication."
-      : error.code === "auth/unauthorized-domain"
-        ? "Open this page from the website or localhost, not as a file."
-        : "Sign-in failed. Check the username and password, then try again.";
-  } finally {
-    submitButton.disabled = false;
-  }
-});
-resendVerificationButton.addEventListener("click", async () => {
-  const user = auth.currentUser;
-  if (!user || user.email?.toLowerCase() !== REVIEWER_EMAIL) return;
-  resendVerificationButton.disabled = true;
-  try {
-    await sendEmailVerification(user);
-    authStatus.textContent = `Verification email sent to ${REVIEWER_EMAIL}. Verify it, then sign in again.`;
-  } catch (error) {
-    console.error("Could not send verification email", error);
-    authStatus.textContent = "Could not send the verification email. Please try again later.";
-  } finally {
-    resendVerificationButton.disabled = false;
-  }
-});
-signOutButton.addEventListener("click", () => signOut(auth));
-document.getElementById("reload-applications").addEventListener("click", loadApplications);
-roleFilter.addEventListener("change", renderApplications);
-statusFilter.addEventListener("change", renderApplications);
-
-// The switch for new applications: a public document the Discord bot reads (siteConfig/applications, open: true or false). Closing it stops the form at the bot, not only here.
-const switchStatus = document.getElementById("apps-switch-status");
-const switchToggle = document.getElementById("apps-switch-toggle");
-const switchRef = doc(db, "siteConfig", "applications");
-let applicationsOpen = true;
-let confirmTimer = null;
-
 function showSwitch() {
   switchStatus.textContent = applicationsOpen ? "Applications are OPEN. People who meet the requirements can apply." : "Applications are CLOSED. Nobody can send a new application.";
   switchToggle.textContent = applicationsOpen ? "Close applications" : "Open applications";
   switchToggle.disabled = false;
 }
 
-async function loadSwitch() {
-  switchToggle.disabled = true;
-  try {
-    const snapshot = await getDoc(switchRef);
-    applicationsOpen = !snapshot.exists() || snapshot.data().open !== false;
-    showSwitch();
-  } catch (error) {
-    console.error("Could not read the applications switch", error);
-    switchStatus.textContent = "Could not read whether applications are open. Try Refresh.";
+async function loadApplications() {
+  appStatus.textContent = "Loading applications…";
+  let result;
+  try { result = await call("/admin/applications"); } catch {
+    appStatus.textContent = "Could not reach the bot. It may be waking up: try Refresh in a minute.";
+    return;
   }
+  if (result.status === 401) { clearSession(); showLoggedOut("Your login ran out. Please log in with Discord again."); return; }
+  if (result.status === 403) { clearSession(); showLoggedOut(result.data.error || "This Discord account is not allowed to open this page."); return; }
+  if (!result.ok) { appStatus.textContent = "Could not load applications. Please try Refresh."; return; }
+  loginLink.hidden = true;
+  signOutButton.hidden = false;
+  reviewSection.hidden = false;
+  authStatus.textContent = "Signed in with Discord.";
+  reviewerAccount.textContent = result.data.reviewer || "";
+  applications = Array.isArray(result.data.applications) ? result.data.applications : [];
+  applicationsOpen = result.data.open !== false;
+  showSwitch();
+  appStatus.textContent = `${applications.length} application${applications.length === 1 ? "" : "s"}.`;
+  renderApplications();
 }
 
 switchToggle.addEventListener("click", async () => {
@@ -255,56 +135,21 @@ switchToggle.addEventListener("click", async () => {
   confirmTimer = null;
   switchToggle.disabled = true;
   try {
-    await setDoc(switchRef, { open: !applicationsOpen, updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || "" });
-    applicationsOpen = !applicationsOpen;
+    const result = await call("/admin/switch", { method: "POST", body: JSON.stringify({ open: !applicationsOpen }) });
+    if (!result.ok) throw new Error(String(result.status));
+    applicationsOpen = result.data.open !== false;
     showSwitch();
-    switchStatus.textContent += " (The bot notices within about 20 seconds.)";
-  } catch (error) {
-    console.error("Could not change the applications switch", error);
-    switchStatus.textContent = "Could not change it. Check that you are signed in as the reviewer account.";
+  } catch {
+    switchStatus.textContent = "Could not change it. Please log in with Discord again and retry.";
     switchToggle.disabled = false;
   }
 });
 
-async function applyAuthState(user) {
-  // Ignore a delayed initial auth callback if a sign-in has already completed.
-  if (!user && auth.currentUser) user = auth.currentUser;
-  const authorized = user?.emailVerified && user.email?.toLowerCase() === REVIEWER_EMAIL;
-  if (!user) {
-    loadedReviewerUid = null;
-    passwordForm.hidden = false;
-    reviewSection.hidden = true;
-    resendVerificationButton.hidden = true;
-    signOutButton.hidden = true;
-    authStatus.textContent = `Only ${REVIEWER_EMAIL} can access application records.`;
-    return;
-  }
-  if (user.email?.toLowerCase() !== REVIEWER_EMAIL) {
-    passwordForm.hidden = true;
-    reviewSection.hidden = true;
-    authStatus.textContent = `This account isn’t authorized. Signing out ${user.email || "the current account"}.`;
-    await signOut(auth);
-    return;
-  }
-  if (!authorized) {
-    passwordForm.hidden = true;
-    reviewSection.hidden = true;
-    resendVerificationButton.hidden = false;
-    signOutButton.hidden = false;
-    authStatus.textContent = `Please verify ${REVIEWER_EMAIL} using the link sent to your inbox, then sign in again.`;
-    return;
-  }
-  passwordForm.hidden = true;
-  resendVerificationButton.hidden = true;
-  signOutButton.hidden = false;
-  authStatus.textContent = "Authorized reviewer signed in.";
-  reviewerAccount.textContent = user.email;
-  reviewSection.hidden = false;
-  if (loadedReviewerUid !== user.uid) {
-    loadedReviewerUid = user.uid;
-    loadSwitch();
-    await loadApplications();
-  }
-}
+signOutButton.addEventListener("click", () => { clearSession(); showLoggedOut("Signed out."); });
+document.getElementById("reload-applications").addEventListener("click", loadApplications);
+roleFilter.addEventListener("change", renderApplications);
+statusFilter.addEventListener("change", renderApplications);
 
-onAuthStateChanged(auth, applyAuthState);
+if (!apiBase) showLoggedOut("The admin page is not available right now.");
+else if (session) loadApplications();
+else showLoggedOut(loginError === "denied" ? "You cancelled the Discord login." : loginError ? "The Discord login did not work. Please try again." : "Log in with Discord. Only people who can decide applications in the server can open this page.");

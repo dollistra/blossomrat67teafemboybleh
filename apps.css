@@ -24,3 +24,10 @@
 .review-switch { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1.2rem; padding: 1rem 1.2rem; border-radius: 14px; background: rgba(255, 255, 255, .6); }
 .review-switch h2 { margin: 0 0 .2rem; font-size: 1.1rem; }
 .review-switch p { margin: 0; }
+
+/* review page: the decision shown on each application */
+.review-card-header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.review-status { padding: .2rem .7rem; border-radius: 999px; font-size: .85rem; background: #f3e3ef; color: #6b3a5a; white-space: nowrap; }
+.review-status-accepted { background: #dff3e3; color: #2d6a3e; }
+.review-status-declined { background: #f8dede; color: #8a3030; }
+

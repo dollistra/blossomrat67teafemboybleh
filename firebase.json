@@ -1,42 +1,81 @@
-{
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs22",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log"
-    ]
-  },
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      ".firebaserc",
-      "firestore.rules",
-      "ADMIN_SETUP.md",
-      "dev-server.js",
-      "server.js",
-      "server-stats.json",
-      "package.json",
-      "package-lock.json",
-      "functions/**",
-      "staff-applications-worker/**",
-      "**/node_modules/**",
-      "**/.*",
-      "**/*.bat",
-      "**/*.ps1",
-      "**/*.cmd",
-      "**/*.sh",
-      "**/*.exe",
-      "**/*.cjs"
-    ],
-    "cleanUrls": true,
-    "trailingSlash": false
-  }
+﻿{
+    "firestore":  {
+                      "rules":  "firestore.rules",
+                      "indexes":  "firestore.indexes.json"
+                  },
+    "hosting":  {
+                    "public":  ".",
+                    "ignore":  [
+                                   "firebase.json",
+                                   ".firebaserc",
+                                   "firestore.rules",
+                                   "firestore.indexes.json",
+                                   "dev-server.js",
+                                   "server.js",
+                                   "server-stats.json",
+                                   "package.json",
+                                   "package-lock.json",
+                                   "README.md",
+                                   "CNAME",
+                                   "**/node_modules/**",
+                                   "**/.*",
+                                   "**/*.bat",
+                                   "**/*.ps1",
+                                   "**/*.cmd",
+                                   "**/*.sh",
+                                   "**/*.exe",
+                                   "**/*.cjs",
+                                   "**/*.md"
+                               ],
+                    "cleanUrls":  true,
+                    "trailingSlash":  false,
+                    "headers":  [
+                                    {
+                                        "source":  "**",
+                                        "headers":  [
+                                                        {
+                                                            "key":  "Content-Security-Policy",
+                                                            "value":  "default-src \u0027self\u0027; script-src \u0027self\u0027 \u0027unsafe-inline\u0027 https://www.gstatic.com https://js.tebex.io; style-src \u0027self\u0027 \u0027unsafe-inline\u0027; img-src \u0027self\u0027 data: blob: https:; font-src \u0027self\u0027 data:; connect-src \u0027self\u0027 https://firestore.googleapis.com https://blossomvale-bot.onrender.com https://headless.tebex.io https://api.mcstatus.io https://*.tebex.io; frame-src https://*.tebex.io https://tebex.io; object-src \u0027none\u0027; base-uri \u0027self\u0027; form-action \u0027self\u0027 https://*.tebex.io; frame-ancestors \u0027none\u0027; upgrade-insecure-requests"
+                                                        },
+                                                        {
+                                                            "key":  "X-Frame-Options",
+                                                            "value":  "DENY"
+                                                        },
+                                                        {
+                                                            "key":  "X-Content-Type-Options",
+                                                            "value":  "nosniff"
+                                                        },
+                                                        {
+                                                            "key":  "Referrer-Policy",
+                                                            "value":  "strict-origin-when-cross-origin"
+                                                        },
+                                                        {
+                                                            "key":  "Permissions-Policy",
+                                                            "value":  "camera=(), microphone=(), geolocation=(), usb=(), serial=(), bluetooth=()"
+                                                        },
+                                                        {
+                                                            "key":  "Strict-Transport-Security",
+                                                            "value":  "max-age=31536000; includeSubDomains"
+                                                        },
+                                                        {
+                                                            "key":  "Cross-Origin-Opener-Policy",
+                                                            "value":  "same-origin-allow-popups"
+                                                        }
+                                                    ]
+                                    },
+                                    {
+                                        "source":  "/review-114f3c61cfb6",
+                                        "headers":  [
+                                                        {
+                                                            "key":  "Cache-Control",
+                                                            "value":  "no-store"
+                                                        },
+                                                        {
+                                                            "key":  "X-Robots-Tag",
+                                                            "value":  "noindex, nofollow"
+                                                        }
+                                                    ]
+                                    }
+                                ]
+                }
 }
