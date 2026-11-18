@@ -1,4 +1,4 @@
-﻿// Two small guards. Static hosting cannot send security headers, so the page does these itself:
+// Two small guards. Static hosting cannot send security headers, so the page does these itself:
 // 1. it will not run inside somebody else's frame (stops clickjacking), and
 // 2. a copy of the site on another address sends visitors back to the real one.
 (function () {
