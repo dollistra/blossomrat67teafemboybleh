@@ -71,10 +71,10 @@
       <section class="board wiki-hero staff-hero apps-hero" aria-labelledby="staff-heading">
         <div class="board-top" aria-hidden="true"></div>
         <div class="board-body">
-          <p class="apps-eyebrow">✿ Join the team ✿</p>
+          <p class="apps-eyebrow" id="apply-eyebrow">✿ Join the team ✿</p>
           <h1 id="staff-heading">Join the Blossom Vale Team</h1>
           <div class="floral-divider" aria-hidden="true"><span></span><img class="divider-flower" src="./flower-small.png?v=4" alt="" draggable="false"><span></span></div>
-          <p class="hero-intro">Would you like to help make Blossom Vale a friendly place to play? Tell us a little about yourself and the kind of help you’d like to offer. We’ll get back to you on Discord if there’s a suitable opening.</p>
+          <p class="hero-intro" id="apply-intro">Would you like to help make Blossom Vale a friendly place to play? Tell us a little about yourself and the kind of help you’d like to offer. We’ll get back to you on Discord if there’s a suitable opening.</p>
         </div>
         <div class="board-bottom" aria-hidden="true"></div>
       </section>
@@ -128,7 +128,7 @@
                 <li>Keep other players’ privacy: don’t show private chats, and ask before featuring someone.</li>
                 <li>Share the correct server address and Discord link where you post.</li>
                 <li>Keep it friendly and suitable for all ages.</li>
-                <li>If your content breaks our rules or you stop posting, we may take the creator role away. What creators receive is agreed with the team.</li></ul>
+                <li>If your content breaks our rules or you stop posting, we may take the creator role away. Rewards depend on your views: read the Creator Info channel in our Discord for the details.</li></ul>
           </details>
           <details class="staff-details"><summary>Application guidelines <span>6 points</span></summary>
             <ul>
@@ -173,7 +173,7 @@
                 <p class="staff-field-hint" id="discord-id-help">This comes from your Discord login, so it is always correct.</p>
               </div>
               <div class="staff-field">
-                <label for="app-role">Which team role interests you? <span>(required)</span></label>
+                <label for="app-role">Which role would you like to apply for? <span>(required)</span></label>
                 <select id="app-role" name="role" required>
                   <option value="" selected disabled>Choose a role</option>
                   <option value="helper">Helper</option>
@@ -188,11 +188,11 @@
                 <label for="app-age">Your age <span>(required)</span></label>
                 <input id="app-age" name="age" type="number" min="13" max="99" inputmode="numeric" placeholder="You must be at least 13" required>
               </div>
+              <div class="role-extra" data-role-questions="helper" hidden>
               <div class="staff-field">
                 <label for="app-time">Your time zone <span>(required)</span></label>
-                <input id="app-time" name="availability" maxlength="160" placeholder="For example: UK time (GMT)" required>
+                <input id="app-time" name="availability" maxlength="160" placeholder="For example: UK time (GMT)" data-required="true">
               </div>
-              <div class="role-extra" data-role-questions="helper" hidden>
               <div class="staff-field staff-field-wide">
                 <label for="app-experience">Your relevant experience <span>(required)</span></label>
                 <textarea id="app-experience" name="experience" rows="3" maxlength="600" data-min="30" data-required="true" placeholder="Roles you've held, communities you've helped with, or content you've made. If you have none yet, say so and tell us what you've done that helps."></textarea>
@@ -209,10 +209,14 @@
               <h3 id="helper-question-title">Helper questions</h3>
               <p class="staff-field-hint helper-question-note">Be specific: say what you would actually do and what you would say, and why. Short, general answers won’t be enough. The section about Blossom Vale checks how well you know the server, so name the real commands and places where you can. You can look around our website, wiki and Discord first.</p>
               <details class="staff-qgroup" open>
-              <summary>About you <span>2 questions</span></summary>
+              <summary>About you <span>3 questions</span></summary>
               <div class="staff-field">
                 <label for="app-helper-tenure">When did you first join Blossom Vale, and in a normal week how much time could you honestly give to helping out?</label>
                 <textarea id="app-helper-tenure" name="helperTenure" rows="4" maxlength="400" data-min="40" data-required="true"></textarea>
+              </div>
+              <div class="staff-field">
+                <label for="app-helper-punished">Have you ever been punished or banned on Blossom Vale, or on another Minecraft or Discord server? If so, what happened and what did you learn? (If not, just write "No".)</label>
+                <textarea id="app-helper-punished" name="helperPunished" rows="3" maxlength="500" data-min="2" data-required="true"></textarea>
               </div>
               <div class="staff-field">
                 <label for="app-helper-role">What do you think a Helper does at Blossom Vale, and are you able to do all of it?</label>
@@ -281,6 +285,14 @@
                 <input id="app-audience" name="audience" maxlength="160" placeholder="For example: YouTube 1.2k, TikTok 800" data-required="true">
               </div>
               <div class="staff-field">
+                <label for="app-typical-views">Roughly how many views do your last 5 videos or posts get? <span>(required)</span></label>
+                <input id="app-typical-views" name="typicalViews" maxlength="160" placeholder="For example: about 800 each" data-required="true">
+              </div>
+              <div class="staff-field">
+                <label for="app-post-rate">How often do you post right now, and in which language? <span>(required)</span></label>
+                <input id="app-post-rate" name="postRate" maxlength="160" placeholder="For example: 2 videos a week, in English" data-required="true">
+              </div>
+              <div class="staff-field">
                 <label for="app-content-link">Link to your main channel or profile <span>(required)</span></label>
                 <input id="app-content-link" name="contentLink" type="url" maxlength="500" placeholder="https://" data-required="true">
               </div>
@@ -305,9 +317,13 @@
                 <label for="app-creator-safety">How would you keep your videos friendly and suitable for all ages, including how you show other players?</label>
                 <textarea id="app-creator-safety" name="creatorSafety" rows="4" maxlength="600" data-min="60" data-required="true"></textarea>
               </div>
+              <label class="staff-consent" for="app-disclose">
+                <input id="app-disclose" name="disclose" type="checkbox" data-required="true">
+                <span>If I get rewards from Blossom Vale for a video, I will say so in the video or its description (for example "sponsored" or "gifted").</span>
+              </label>
             </section>
             <div class="staff-field">
-              <label for="app-reason">Tell us about yourself and why you would like to join the team <span>(required)</span></label>
+              <label for="app-reason"><span id="app-reason-text">Tell us about yourself and why you would like to join the team</span> <span>(required)</span></label>
               <textarea id="app-reason" name="reason" rows="3" maxlength="800" data-min="80" required></textarea>
             </div>
             <div class="staff-field">
@@ -317,7 +333,7 @@
 
             <label class="staff-consent" for="app-requirements">
               <input id="app-requirements" name="requirements" type="checkbox" required>
-              <span>I have read the requirements, team expectations and application guidelines, and I meet the requirements.</span>
+              <span>I have read the requirements, expectations and application guidelines, and I meet the requirements.</span>
             </label>
             <label class="staff-consent" for="app-aware">
               <input id="app-aware" name="aware" type="checkbox" required>
