@@ -87,18 +87,22 @@ if (form && status) {
     creatorPlayed: "Have they played, and what they liked",
     creatorPlan: "What they would make, and how often",
     creatorSafety: "Keeping content friendly and suitable for all ages",
-    contentLink: "Channel link"
+    contentLink: "Channel link",
+    typicalViews: "Views on their last 5 videos or posts",
+    postRate: "How often they post, and in which language",
+    helperPunished: "Previous punishments or bans"
   };
 
   function applicationText(application) {
     const common = ["name", "discordId", "minecraft", "age", "availability", "experience", "reason", "extra"];
     const roleFields = application.role === "helper"
-      ? ["helperTenure", "helperRole", "helperLand", "helperRanks", "helperReport", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordChannels", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
-      : ["platforms", "audience", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
+      ? ["helperTenure", "helperPunished", "helperRole", "helperLand", "helperRanks", "helperReport", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordChannels", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
+      : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     return [...common, ...roleFields]
       .filter((key) => application[key])
       .map((key) => `${applicationLabels[key]}\n${application[key]}`)
       .concat(application.experienceProofCount ? [`Experience proof\n${application.experienceProofCount} screenshot${application.experienceProofCount === 1 ? "" : "s"} attached`] : [])
+      .concat(application.disclosureConfirmed ? ["Rewards\nThey will say it when Blossom Vale gives them rewards."] : [])
       .concat(application.requirementsConfirmed ? ["Requirements\nThey confirmed they read the guidelines, meet the requirements and wrote their answers without AI."] : [])
       .join("\n\n");
   }
@@ -107,9 +111,10 @@ if (form && status) {
   function applicationAnswers(application) {
     const common = ["name", "discordId", "minecraft", "age", "availability", "experience", "reason", "extra"];
     const roleFields = application.role === "helper"
-      ? ["helperTenure", "helperRole", "helperLand", "helperRanks", "helperReport", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordChannels", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
-      : ["platforms", "audience", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
+      ? ["helperTenure", "helperPunished", "helperRole", "helperLand", "helperRanks", "helperReport", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordChannels", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
+      : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     const answers = [...common, ...roleFields].filter((key) => application[key]).map((key) => ({ label: applicationLabels[key], value: String(application[key]) }));
+    if (application.disclosureConfirmed) answers.push({ label: "Rewards", value: "They will say it when Blossom Vale gives them rewards." });
     if (application.requirementsConfirmed) answers.push({ label: "Requirements", value: "They confirmed they read the guidelines, meet the requirements and wrote their answers without AI." });
     return answers;
   }
@@ -312,7 +317,7 @@ if (form && status) {
     };
 
     if (role === "helper") {
-      for (const field of ["helperTenure", "helperRole", "helperLand", "helperRanks", "helperReport", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordChannels", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]) {
+      for (const field of ["helperTenure", "helperPunished", "helperRole", "helperLand", "helperRanks", "helperReport", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordChannels", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]) {
         application[field] = value(data, field);
       }
     } else if (role === "creator") {
@@ -330,7 +335,8 @@ if (form && status) {
       }
       application.platforms = value(data, "platforms");
       application.contentLink = value(data, "contentLink");
-      for (const field of ["audience", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"]) application[field] = value(data, field);
+      for (const field of ["audience", "typicalViews", "postRate", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"]) application[field] = value(data, field);
+      application.disclosureConfirmed = data.get("disclose") === "on";
       submitButton.disabled = true;
       status.textContent = "Preparing your screenshot…";
       try {
