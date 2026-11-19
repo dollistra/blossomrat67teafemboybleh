@@ -29,8 +29,24 @@ if (form && status) {
     roleSelect.dispatchEvent(new Event("change"));
   }));
 
+  // the top of the page and one label read differently for a Content Creator (no talk of "the team")
+  const wording = {
+    eyebrow: document.getElementById("apply-eyebrow"), title: document.getElementById("staff-heading"), intro: document.getElementById("apply-intro"), reason: document.getElementById("app-reason-text")
+  };
+  const wordingDefault = Object.fromEntries(Object.entries(wording).map(([key, el]) => [key, el ? el.textContent : ""]));
+  const wordingCreator = {
+    eyebrow: "✿ Create with us ✿", title: "Become a Blossom Vale Creator",
+    intro: "Do you make videos or other content? Tell us about your channel and what you would make about Blossom Vale. There is no minimum number of followers, but we look for a good channel that makes good videos.",
+    reason: "Tell us about yourself and why you would like to be a Blossom Vale creator"
+  };
+  function updateWording(role) {
+    const text = role === "creator" ? wordingCreator : wordingDefault;
+    for (const key of Object.keys(wording)) if (wording[key] && text[key]) wording[key].textContent = text[key];
+  }
+
   const updateRoleQuestions = () => {
     updateRequirements();
+    updateWording(roleSelect.value);
     const selectedRole = roleSelect.value;
     roleSections.forEach((section) => {
       const active = section.dataset.roleQuestions === selectedRole;
@@ -113,6 +129,9 @@ if (form && status) {
   };
   let session = "";
   let eligible = false;
+  let gatedFor = "";
+  const urlRole = new URLSearchParams(window.location.search).get("role");
+  const gateRole = () => ((roleSelect.value || urlRole) === "creator" ? "creator" : "helper");        // Content Creators need no level
   try { session = sessionStorage.getItem(SESSION_KEY) || ""; } catch { session = ""; }
   const fragment = new URLSearchParams(window.location.hash.slice(1));
   if (fragment.get("session")) {
@@ -144,6 +163,7 @@ if (form && status) {
 
   async function startGate() {
     eligible = false;
+    gatedFor = gateRole();
     form.hidden = true;
     if (!apiBase) { renderGate({ message: "Applications are not available right now. Please try again later." }); return; }
     if (loginError && !session) {
@@ -154,14 +174,16 @@ if (form && status) {
       let open = true;
       try { open = (await (await fetch(apiBase + "/apply/open")).json()).open !== false; } catch { /* the bot may be waking up */ }
       renderGate(open
-        ? { message: "To apply, log in with Discord. We check that you are in the server, that you are level 15 in Discord and in the game, and that your Minecraft account is linked.", needsLogin: true }
+        ? { message: gateRole() === "creator"
+            ? "To apply, log in with Discord. We check that you are in the server and that your Minecraft account is linked. There is no level requirement for Content Creators."
+            : "To apply, log in with Discord. We check that you are in the server, that you are level 15 in Discord and in the game, and that your Minecraft account is linked.", needsLogin: true }
         : { message: "Applications are closed right now. Please check again later." });
       return;
     }
     renderGate({ message: "Checking your account…" });
     let state;
     try {
-      const response = await fetch(apiBase + "/apply/status", { headers: { Authorization: "Bearer " + session } });
+      const response = await fetch(apiBase + "/apply/status?role=" + gateRole(), { headers: { Authorization: "Bearer " + session } });
       if (response.status === 401) { clearSession(); renderGate({ message: "Your login ran out. Please log in with Discord again.", needsLogin: true }); return; }
       if (!response.ok) throw new Error("status " + response.status);
       state = await response.json();
@@ -170,12 +192,15 @@ if (form && status) {
       return;
     }
     const min = state.minLevel;
+    const levelRows = state.levelRequired === false ? [] : [
+      [(state.serverLevel || 0) >= min, "Discord level " + min + " or higher (you are level " + (state.serverLevel || 0) + ")"],
+      [state.gameLevel !== null && state.gameLevel >= min, "In-game level " + min + " or higher" + (state.gameLevel === null ? "" : " (you are level " + state.gameLevel + ")")]
+    ];
     const checks = [
       [state.open, "Applications are open"],
       [state.inServer, "You are in the Blossomvale Discord server"],
-      [(state.serverLevel || 0) >= min, "Discord level " + min + " or higher (you are level " + (state.serverLevel || 0) + ")"],
       [Boolean(state.linked), state.linked ? "Minecraft account linked: " + state.linked.name : "Minecraft account linked"],
-      [state.gameLevel !== null && state.gameLevel >= min, "In-game level " + min + " or higher" + (state.gameLevel === null ? "" : " (you are level " + state.gameLevel + ")")]
+      ...levelRows
     ];
     if (state.blocked) checks.push([false, "You are not able to apply right now"]);
     if (state.eligible) {
@@ -238,6 +263,7 @@ if (form && status) {
   const requestedRole = new URLSearchParams(window.location.search).get("role");
   if (["helper", "creator"].includes(requestedRole)) roleSelect.value = requestedRole;
   roleSelect.addEventListener("change", updateRoleQuestions);
+  roleSelect.addEventListener("change", () => { if (gateRole() !== gatedFor) startGate(); });       // the checks differ for Content Creators
   updateRoleQuestions();
 
   form.addEventListener("submit", async (event) => {
