@@ -70,7 +70,7 @@ function makeApplicationCard(application) {
   const header = el("div", "review-card-header");
   const identity = el("div");
   identity.append(el("h3", "", application.discordName || "Applicant"));
-  identity.append(el("p", "review-card-meta", `${application.role === "creator" ? "Content Creator" : "Helper"} · Submitted ${readableDate(application.at)} · Discord ID ${application.discordId || "—"}`));
+  identity.append(el("p", "review-card-meta", `${application.role === "creator" ? "Content Creator" : application.role === "builder" ? "Lobby Builder" : "Helper"} · Submitted ${readableDate(application.at)} · Discord ID ${application.discordId || "—"}`));
   header.append(identity);
   const status = application.status || "New";
   header.append(el("span", `review-status review-status-${status.toLowerCase()}`, status));

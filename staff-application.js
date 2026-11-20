@@ -39,8 +39,13 @@ if (form && status) {
     intro: "Do you make videos or other content? Tell us about your channel and what you would make about Blossom Vale. There is no minimum number of followers, but we look for a good channel that makes good videos.",
     reason: "Tell us about yourself and why you would like to be a Blossom Vale creator"
   };
+  const wordingBuilder = {
+    eyebrow: "✿ Build with us ✿", title: "Become a Blossom Vale Lobby Builder",
+    intro: "Do you love building cozy places? Tell us about your builds and the tools you use, and show us a few screenshots. You don’t need to be famous, we look for good builds that fit our style.",
+    reason: "Tell us about yourself and why you would like to build for Blossom Vale"
+  };
   function updateWording(role) {
-    const text = role === "creator" ? wordingCreator : wordingDefault;
+    const text = role === "creator" ? wordingCreator : role === "builder" ? wordingBuilder : wordingDefault;
     for (const key of Object.keys(wording)) if (wording[key] && text[key]) wording[key].textContent = text[key];
   }
 
@@ -90,14 +95,22 @@ if (form && status) {
     contentLink: "Channel link",
     typicalViews: "Views on their last 5 videos or posts",
     postRate: "How often they post, and in which language",
-    helperPunished: "Previous punishments or bans"
+    helperPunished: "Previous punishments or bans",
+    builderTime: "How long they have been building",
+    builderTools: "Tools they use",
+    builderLobby: "Lobby or spawn experience",
+    builderCozy: "What cozy means to them",
+    builderHours: "Hours a week",
+    builderLinks: "Links to their builds"
   };
 
   function applicationText(application) {
     const common = ["name", "discordId", "minecraft", "age", "availability", "experience", "reason", "extra"];
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
-      : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
+      : application.role === "builder"
+        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderHours", "builderLinks"]
+        : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     return [...common, ...roleFields]
       .filter((key) => application[key])
       .map((key) => `${applicationLabels[key]}\n${application[key]}`)
@@ -112,7 +125,9 @@ if (form && status) {
     const common = ["name", "discordId", "minecraft", "age", "availability", "experience", "reason", "extra"];
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
-      : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
+      : application.role === "builder"
+        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderHours", "builderLinks"]
+        : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     const answers = [...common, ...roleFields].filter((key) => application[key]).map((key) => ({ label: applicationLabels[key], value: String(application[key]) }));
     if (application.disclosureConfirmed) answers.push({ label: "Rewards", value: "They will say it when Blossom Vale gives them rewards." });
     if (application.requirementsConfirmed) answers.push({ label: "Requirements", value: "They confirmed they read the guidelines, meet the requirements and wrote their answers without AI." });
@@ -136,7 +151,7 @@ if (form && status) {
   let eligible = false;
   let gatedFor = "";
   const urlRole = new URLSearchParams(window.location.search).get("role");
-  const gateRole = () => ((roleSelect.value || urlRole) === "creator" ? "creator" : "helper");        // Content Creators need no level
+  const gateRole = () => { const picked = roleSelect.value || urlRole; return picked === "creator" || picked === "builder" ? picked : "helper"; };        // Content Creators and Lobby Builders need no level
   try { session = sessionStorage.getItem(SESSION_KEY) || ""; } catch { session = ""; }
   const fragment = new URLSearchParams(window.location.hash.slice(1));
   if (fragment.get("session")) {
@@ -179,8 +194,8 @@ if (form && status) {
       let open = true;
       try { open = (await (await fetch(apiBase + "/apply/open")).json()).open !== false; } catch { /* the bot may be waking up */ }
       renderGate(open
-        ? { message: gateRole() === "creator"
-            ? "To apply, log in with Discord. We check that you are in the server and that your Minecraft account is linked. There is no level requirement for Content Creators."
+        ? { message: gateRole() !== "helper"
+            ? "To apply, log in with Discord. We check that you are in the server and that your Minecraft account is linked. There is no level requirement for this role."
             : "To apply, log in with Discord. We check that you are in the server, that you are level 15 in Discord and in the game, and that your Minecraft account is linked.", needsLogin: true }
         : { message: "Applications are closed right now. Please check again later." });
       return;
@@ -266,7 +281,7 @@ if (form && status) {
   });
 
   const requestedRole = new URLSearchParams(window.location.search).get("role");
-  if (["helper", "creator"].includes(requestedRole)) roleSelect.value = requestedRole;
+  if (["helper", "creator", "builder"].includes(requestedRole)) roleSelect.value = requestedRole;
   roleSelect.addEventListener("change", updateRoleQuestions);
   roleSelect.addEventListener("change", () => { if (gateRole() !== gatedFor) startGate(); });       // the checks differ for Content Creators
   updateRoleQuestions();
@@ -320,6 +335,8 @@ if (form && status) {
       for (const field of ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]) {
         application[field] = value(data, field);
       }
+    } else if (role === "builder") {
+      for (const field of ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderHours", "builderLinks"]) application[field] = value(data, field);
     } else if (role === "creator") {
       const proof = data.get("channelProof");
       const allowedTypes = ["image/png", "image/jpeg", "image/webp"];

@@ -87,6 +87,7 @@
           <div class="staff-role-pick" role="group" aria-label="Choose the role you are applying for">
             <button class="apps-button staff-role-btn" type="button" data-pick-role="helper" aria-pressed="false"><span aria-hidden="true">🌷</span> Helper</button>
             <button class="apps-button staff-role-btn" type="button" data-pick-role="creator" aria-pressed="false"><span aria-hidden="true">🎥</span> Content Creator</button>
+            <button class="apps-button staff-role-btn" type="button" data-pick-role="builder" aria-pressed="false"><span aria-hidden="true">🏡</span> Lobby Builder</button>
           </div>
           <p class="staff-field-hint staff-pick-note" id="requirements-pick">Pick a role above to see its requirements.</p>
           <div class="staff-reqs">
@@ -109,6 +110,19 @@
                 <li>Your content is your own, and it is friendly and suitable for all ages.</li>
                 <li>You can show us the channel is yours with a screenshot, and share 1 to 3 examples of your work.</li>
                 <li>You have a plan for what you would make about Blossom Vale.</li></ul>
+          </details>
+          <details class="staff-details" data-for="builder" hidden><summary>Lobby Builder requirements <span>3 points</span></summary>
+            <ul>
+                <li>You can show us 3 to 5 screenshots of builds you made yourself.</li>
+                <li>You know a building tool such as WorldEdit, and you enjoy building in a cozy style.</li>
+                <li>You can give a few hours a week and take feedback kindly.</li></ul>
+          </details>
+          <details class="staff-details" data-for="builder" hidden><summary>What we expect from Lobby Builders <span>4 points</span></summary>
+            <ul>
+                <li>Build to the Blossom Vale style and plan, so the whole lobby feels like one place.</li>
+                <li>Only build what you were asked to build, and ask before changing anything else.</li>
+                <li>Builds made for Blossom Vale stay Blossom Vale’s.</li>
+                <li>Tell us if you will be away. You can step down at any time.</li></ul>
           </details>
           <details class="staff-details" data-for="helper" hidden><summary>What we expect from Helpers <span>8 points</span></summary>
             <ul>
@@ -178,6 +192,7 @@
                   <option value="" selected disabled>Choose a role</option>
                   <option value="helper">Helper</option>
                   <option value="creator">Content Creator</option>
+                  <option value="builder">Lobby Builder</option>
                 </select>
               </div>
               <div class="staff-field">
@@ -305,6 +320,39 @@
                 <input id="app-disclose" name="disclose" type="checkbox" data-required="true">
                 <span>If I get rewards from Blossom Vale for a video, I will say so in the video or its description (for example "sponsored" or "gifted").</span>
               </label>
+            </section>
+            <section class="role-questions" data-role-questions="builder" aria-labelledby="builder-question-title" hidden>
+              <h3 id="builder-question-title">Lobby builder questions</h3>
+              <p class="staff-field-hint helper-question-note">Keep it short and honest. We mostly care about how you build and whether it fits our cozy style.</p>
+              <div class="staff-field">
+                <label for="app-builder-time">How long have you been building in Minecraft?</label>
+                <input id="app-builder-time" name="builderTime" maxlength="160" placeholder="For example: 4 years" data-required="true">
+              </div>
+              <div class="staff-field">
+                <label for="app-builder-tools">Which tools do you use? (WorldEdit, Axiom, VoxelSniper, schematics…)</label>
+                <input id="app-builder-tools" name="builderTools" maxlength="300" data-required="true">
+              </div>
+              <div class="staff-field">
+                <label for="app-builder-lobby">Have you built a lobby or spawn for a server before? If yes, which one?</label>
+                <textarea id="app-builder-lobby" name="builderLobby" rows="3" maxlength="500" data-min="2" data-required="true"></textarea>
+              </div>
+              <div class="staff-field">
+                <label for="app-builder-cozy">What does “cozy” mean to you in a build?</label>
+                <textarea id="app-builder-cozy" name="builderCozy" rows="4" maxlength="600" data-min="40" data-required="true"></textarea>
+              </div>
+              <div class="staff-field">
+                <label for="app-builder-hours">How many hours a week can you give?</label>
+                <input id="app-builder-hours" name="builderHours" maxlength="160" data-required="true">
+              </div>
+              <div class="staff-field">
+                <label for="app-builder-links">Links to your builds (optional): a world download, a video or a build page.</label>
+                <textarea id="app-builder-links" name="builderLinks" rows="2" maxlength="500"></textarea>
+              </div>
+              <div class="staff-field">
+                <label for="app-builder-proof">3 to 5 screenshots of your best builds <span>(required)</span></label>
+                <input id="app-builder-proof" name="experienceProof" type="file" accept="image/png,image/jpeg,image/webp" multiple data-required="true">
+                <p class="staff-field-hint">PNG, JPG or WebP, up to 10 MB each. Choose up to 3 here and put more in the links above.</p>
+              </div>
             </section>
             <div class="staff-field">
               <label for="app-reason"><span id="app-reason-text">Tell us about yourself and why you would like to join the team</span> <span>(required)</span></label>
