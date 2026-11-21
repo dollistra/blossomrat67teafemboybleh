@@ -41,7 +41,7 @@ if (form && status) {
   };
   const wordingBuilder = {
     eyebrow: "✿ Build with us ✿", title: "Become a Blossom Vale Lobby Builder",
-    intro: "Do you love building cozy places? Tell us about your builds and the tools you use, and show us a few screenshots. You don’t need to be famous, we look for good builds that fit our style.",
+    intro: "Do you love building cozy places? We’re hiring several builders, so you’ll build together with a team. Tell us about your builds and the tools you use, and show us a few screenshots. You don’t need to be famous, we look for good builds that fit our style.",
     reason: "What do you love about building? Tell us about a build you are proud of, and a little about yourself"
   };
   function updateWording(role) {
