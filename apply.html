@@ -325,12 +325,8 @@
               <h3 id="builder-question-title">Lobby builder questions</h3>
               <p class="staff-field-hint helper-question-note">Keep it short and honest. We mostly care about how you build and whether it fits our cozy style.</p>
               <div class="staff-field">
-                <label for="app-builder-time">How long have you been building in Minecraft, and which tools do you use?</label>
-                <input id="app-builder-time" name="builderTime" maxlength="300" placeholder="For example: 4 years, WorldEdit and Axiom" data-required="true">
-              </div>
-              <div class="staff-field">
-                <label for="app-builder-lobby">Have you built a lobby or spawn for a server before? If yes, which one?</label>
-                <textarea id="app-builder-lobby" name="builderLobby" rows="3" maxlength="500" data-min="2" data-required="true"></textarea>
+                <label for="app-builder-time">Tell us about your building experience: how long you have built, the tools you use (WorldEdit, Axiom…), and any lobby or spawn you have built for a server.</label>
+                <textarea id="app-builder-time" name="builderTime" rows="4" maxlength="600" data-min="30" data-required="true"></textarea>
               </div>
               <div class="staff-field">
                 <label for="app-builder-cozy">What does “cozy” mean to you in a build?</label>
@@ -341,18 +337,31 @@
                 <textarea id="app-builder-feedback" name="builderFeedback" rows="5" maxlength="800" data-min="60" data-required="true"></textarea>
               </div>
               <div class="staff-field">
+                <label for="app-builder-team">We build to a shared plan and style. How do you take feedback, and what would you do if we asked you to change a build you were proud of?</label>
+                <textarea id="app-builder-team" name="builderTeam" rows="3" maxlength="500" data-min="40" data-required="true"></textarea>
+              </div>
+              <div class="staff-field">
                 <label for="app-builder-hours">How many hours a week can you give?</label>
                 <input id="app-builder-hours" name="builderHours" maxlength="160" data-required="true">
               </div>
               <div class="staff-field">
-                <label for="app-builder-links">Links to your builds (optional): a world download, a video or a build page.</label>
+                <label for="app-builder-links">Links to more of your builds (optional): a world download, a video or a build page. Say which one you are proudest of and what you made in it.</label>
                 <textarea id="app-builder-links" name="builderLinks" rows="2" maxlength="500"></textarea>
               </div>
               <div class="staff-field">
-                <label for="app-builder-proof">Up to 3 screenshots of your best builds <span>(required)</span></label>
+                <label for="app-builder-proof">Up to 5 screenshots of your best builds <span>(required)</span></label>
                 <input id="app-builder-proof" name="experienceProof" type="file" accept="image/png,image/jpeg,image/webp" multiple data-required="true">
                 <p class="staff-field-hint">PNG, JPG or WebP, up to 10 MB each. If you have more, put them in the links above.</p>
               </div>
+              <p class="staff-field-hint">If your application looks good, we will ask for a small test build (a market stall or a garden) in the Blossom Vale style. It is a normal part of the process.</p>
+              <label class="staff-consent" for="app-builder-own">
+                <input id="app-builder-own" name="builderOwn" type="checkbox" data-required="true">
+                <span>The builds I am sharing are my own work, and I am happy to do a small test build if you ask me.</span>
+              </label>
+              <label class="staff-consent" for="app-builder-rights">
+                <input id="app-builder-rights" name="builderRights" type="checkbox" data-required="true">
+                <span>I understand that anything I build for Blossom Vale belongs to Blossom Vale.</span>
+              </label>
             </section>
             <div class="staff-field">
               <label for="app-reason"><span id="app-reason-text">Tell us about yourself and why you would like to join the team</span> <span>(required)</span></label>

@@ -96,8 +96,8 @@ if (form && status) {
     typicalViews: "Views on their last 5 videos or posts",
     postRate: "How often they post, and in which language",
     helperPunished: "Previous punishments or bans",
-    builderTime: "How long they have been building, and the tools they use",
-    builderLobby: "Lobby or spawn experience",
+    builderTime: "Building experience: how long, tools, and any lobby or spawn they built",
+    builderTeam: "How they take feedback and changes to their builds",
     builderCozy: "What cozy means to them",
     builderFeedback: "Their feedback on our lobby: what to keep and what to improve",
     builderHours: "Hours a week",
@@ -109,12 +109,13 @@ if (form && status) {
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
       : application.role === "builder"
-        ? ["builderTime", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
+        ? ["builderTime", "builderCozy", "builderFeedback", "builderTeam", "builderHours", "builderLinks"]
         : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     return [...common, ...roleFields]
       .filter((key) => application[key])
       .map((key) => `${applicationLabels[key]}\n${application[key]}`)
       .concat(application.experienceProofCount ? [`Experience proof\n${application.experienceProofCount} screenshot${application.experienceProofCount === 1 ? "" : "s"} attached`] : [])
+      .concat(application.builderConfirmed ? ["Agreements\nThey confirmed the builds are their own work, they will do a small test build if asked, and anything they build for Blossom Vale belongs to Blossom Vale."] : [])
       .concat(application.disclosureConfirmed ? ["Rewards\nThey will say it when Blossom Vale gives them rewards."] : [])
       .concat(application.requirementsConfirmed ? ["Requirements\nThey confirmed they read the guidelines, meet the requirements and wrote their answers without AI."] : [])
       .join("\n\n");
@@ -126,9 +127,10 @@ if (form && status) {
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
       : application.role === "builder"
-        ? ["builderTime", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
+        ? ["builderTime", "builderCozy", "builderFeedback", "builderTeam", "builderHours", "builderLinks"]
         : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     const answers = [...common, ...roleFields].filter((key) => application[key]).map((key) => ({ label: applicationLabels[key], value: String(application[key]) }));
+    if (application.builderConfirmed) answers.push({ label: "Agreements", value: "They confirmed the builds are their own work, they will do a small test build if asked, and anything they build for Blossom Vale belongs to Blossom Vale." });
     if (application.disclosureConfirmed) answers.push({ label: "Rewards", value: "They will say it when Blossom Vale gives them rewards." });
     if (application.requirementsConfirmed) answers.push({ label: "Requirements", value: "They confirmed they read the guidelines, meet the requirements and wrote their answers without AI." });
     return answers;
@@ -336,7 +338,8 @@ if (form && status) {
         application[field] = value(data, field);
       }
     } else if (role === "builder") {
-      for (const field of ["builderTime", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]) application[field] = value(data, field);
+      for (const field of ["builderTime", "builderCozy", "builderFeedback", "builderTeam", "builderHours", "builderLinks"]) application[field] = value(data, field);
+      application.builderConfirmed = data.get("builderOwn") === "on" && data.get("builderRights") === "on";
     } else if (role === "creator") {
       const proof = data.get("channelProof");
       const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
@@ -370,8 +373,9 @@ if (form && status) {
     if (proofFiles.length) {
       const allowedProof = ["image/png", "image/jpeg", "image/webp"];
       const proofInput = document.getElementById("app-experience-proof");
-      if (proofFiles.length > 3) {
-        status.textContent = "Please attach no more than 3 screenshots of your experience.";
+      const proofMax = role === "builder" ? 5 : 3;
+      if (proofFiles.length > proofMax) {
+        status.textContent = "Please attach no more than " + proofMax + " screenshots.";
         proofInput.focus();
         return;
       }
