@@ -42,7 +42,7 @@ if (form && status) {
   const wordingBuilder = {
     eyebrow: "✿ Build with us ✿", title: "Become a Blossom Vale Lobby Builder",
     intro: "Do you love building cozy places? Tell us about your builds and the tools you use, and show us a few screenshots. You don’t need to be famous, we look for good builds that fit our style.",
-    reason: "Tell us about yourself and why you would like to build for Blossom Vale"
+    reason: "What do you love about building? Tell us about a build you are proud of, and a little about yourself"
   };
   function updateWording(role) {
     const text = role === "creator" ? wordingCreator : role === "builder" ? wordingBuilder : wordingDefault;
@@ -96,8 +96,7 @@ if (form && status) {
     typicalViews: "Views on their last 5 videos or posts",
     postRate: "How often they post, and in which language",
     helperPunished: "Previous punishments or bans",
-    builderTime: "How long they have been building",
-    builderTools: "Tools they use",
+    builderTime: "How long they have been building, and the tools they use",
     builderLobby: "Lobby or spawn experience",
     builderCozy: "What cozy means to them",
     builderFeedback: "Their feedback on our lobby: what to keep and what to improve",
@@ -110,7 +109,7 @@ if (form && status) {
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
       : application.role === "builder"
-        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
+        ? ["builderTime", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
         : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     return [...common, ...roleFields]
       .filter((key) => application[key])
@@ -127,7 +126,7 @@ if (form && status) {
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
       : application.role === "builder"
-        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
+        ? ["builderTime", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
         : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     const answers = [...common, ...roleFields].filter((key) => application[key]).map((key) => ({ label: applicationLabels[key], value: String(application[key]) }));
     if (application.disclosureConfirmed) answers.push({ label: "Rewards", value: "They will say it when Blossom Vale gives them rewards." });
@@ -337,7 +336,7 @@ if (form && status) {
         application[field] = value(data, field);
       }
     } else if (role === "builder") {
-      for (const field of ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]) application[field] = value(data, field);
+      for (const field of ["builderTime", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]) application[field] = value(data, field);
     } else if (role === "creator") {
       const proof = data.get("channelProof");
       const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
