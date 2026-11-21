@@ -100,6 +100,7 @@ if (form && status) {
     builderTools: "Tools they use",
     builderLobby: "Lobby or spawn experience",
     builderCozy: "What cozy means to them",
+    builderFeedback: "Their feedback on our lobby: what to keep and what to improve",
     builderHours: "Hours a week",
     builderLinks: "Links to their builds"
   };
@@ -109,7 +110,7 @@ if (form && status) {
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
       : application.role === "builder"
-        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderHours", "builderLinks"]
+        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
         : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     return [...common, ...roleFields]
       .filter((key) => application[key])
@@ -126,7 +127,7 @@ if (form && status) {
     const roleFields = application.role === "helper"
       ? ["helperTenure", "helperPunished", "helperRanks", "helperEarn", "helper", "helperStaffAbuse", "helperDiscordScam", "helperDiscordAccusation", "helperDiscordWellbeing"]
       : application.role === "builder"
-        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderHours", "builderLinks"]
+        ? ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]
         : ["platforms", "audience", "typicalViews", "postRate", "contentLink", "exampleLinks", "creatorPlayed", "creatorPlan", "creatorSafety"];
     const answers = [...common, ...roleFields].filter((key) => application[key]).map((key) => ({ label: applicationLabels[key], value: String(application[key]) }));
     if (application.disclosureConfirmed) answers.push({ label: "Rewards", value: "They will say it when Blossom Vale gives them rewards." });
@@ -336,7 +337,7 @@ if (form && status) {
         application[field] = value(data, field);
       }
     } else if (role === "builder") {
-      for (const field of ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderHours", "builderLinks"]) application[field] = value(data, field);
+      for (const field of ["builderTime", "builderTools", "builderLobby", "builderCozy", "builderFeedback", "builderHours", "builderLinks"]) application[field] = value(data, field);
     } else if (role === "creator") {
       const proof = data.get("channelProof");
       const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
