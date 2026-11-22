@@ -243,7 +243,10 @@ if (form && status) {
       help: state.linked ? "" : "To link your Minecraft account: type /link in the game, then type /link in the Discord server and paste the code."
     });
   }
-  gate.logout.addEventListener("click", () => { clearSession(); startGate(); });
+  gate.logout.addEventListener("click", async () => {
+    try { if (session) await fetch(apiBase + "/apply/logout", { method: "POST", headers: { Authorization: "Bearer " + session } }); }
+    finally { clearSession(); startGate(); }
+  });
   startGate();
 
   async function compressProof(file) {
@@ -403,7 +406,7 @@ if (form && status) {
       const proof = payload.proof;
       delete payload.proof;
       const blobs = [...(proof ? [proof] : []), ...proofImages];
-      const body = { role: payload.role, answers: applicationAnswers(payload), files: await Promise.all(blobs.map(async (blob) => ({ type: blob.type || "image/webp", data: await blobToBase64(blob) }))) };
+      const body = { role: payload.role, consented: payload.consented, requirementsConfirmed: payload.requirementsConfirmed, answers: applicationAnswers(payload), files: await Promise.all(blobs.map(async (blob) => ({ type: blob.type || "image/webp", data: await blobToBase64(blob) }))) };
       const response = await fetch(apiBase + "/apply/submit", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + session }, body: JSON.stringify(body) });
       const result = await response.json().catch(() => ({}));
       if (response.status === 401) { clearSession(); startGate(); throw new Error(result.error || "Please log in with Discord again."); }

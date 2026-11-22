@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+!.env.*.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.firebase/
+.wrangler/
+node_modules/
+*.log
+*.pem
+*.key
+firebase-service-account*.json
+*-firebase-adminsdk-*.json
+service-account*.json
