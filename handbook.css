@@ -1,0 +1,24 @@
+/* The staff handbook page: a contents list beside the document, in the same wood and pink as the review page. */
+.handbook{display:grid;grid-template-columns:240px minmax(0,1fr);gap:18px;align-items:start}
+.handbook[hidden],.handbook-contents[hidden]{display:none}
+.handbook-contents,.handbook-text{background:#6b3f30;border:4px solid #3f231b;box-shadow:inset 0 0 0 2px #a86c4d;color:#fff3e4}
+.handbook-contents{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding:14px}
+.handbook-contents h2{margin:0 0 8px;color:#f6a4e1;font-size:1.15rem;text-shadow:2px 2px #60334e}
+.handbook-contents ul{margin:0;padding:0;list-style:none}
+.handbook-contents li{margin:6px 0;line-height:1.4}
+.handbook-contents a{color:#fff3e4;text-decoration:none}
+.handbook-contents a:hover,.handbook-contents a:focus-visible{color:#f9c1e9;text-decoration:underline}
+.handbook-text{grid-column:2;padding:22px 26px;line-height:1.7;overflow-wrap:anywhere}
+.handbook-contents[hidden]+.handbook-text{grid-column:1/-1}
+.handbook-text h2,.handbook-text h3,.handbook-text h4,.handbook-text h5,.handbook-text h6{margin:1.4em 0 .5em;color:#f6a4e1;line-height:1.3;text-shadow:2px 2px #60334e;scroll-margin-top:16px}
+.handbook-text>:first-child{margin-top:0}
+.handbook-text a{color:#f9c1e9}
+.handbook-text img{max-width:100%;height:auto}
+.handbook-text blockquote{margin:10px 0;padding:4px 14px;border-left:4px solid #f4b8e4}
+.handbook-text code{background:#3f231b;padding:1px 5px}
+.handbook-text hr{border:0;border-top:2px solid #a86c4d;margin:20px 0}
+.handbook-table{overflow-x:auto}
+.handbook-table table{border-collapse:collapse;width:100%}
+.handbook-table td{border:2px solid #a86c4d;padding:6px 10px;vertical-align:top}
+.handbook-table tr:first-child td{background:#82503d}
+@media(max-width:760px){.handbook{grid-template-columns:1fr}.handbook-text{grid-column:1;padding:16px}.handbook-contents{position:static;max-height:260px}}

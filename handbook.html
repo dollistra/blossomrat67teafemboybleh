@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="./guard.js"></script>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://js.tebex.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://blossomvale-bot.onrender.com https://headless.tebex.io https://api.mcstatus.io https://*.tebex.io; frame-src https://*.tebex.io https://tebex.io; object-src 'none'; base-uri 'self'; form-action 'self' https://*.tebex.io; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#e58fc4">
+  <link rel="icon" href="./favicon.ico" sizes="any"><link rel="stylesheet" href="./styles.css?v=11"><link rel="stylesheet" href="./wiki.css?v=5"><link rel="stylesheet" href="./apps.css?v=3"><link rel="stylesheet" href="./handbook.css?v=1">
+  <script type="module" src="./handbook.js?v=1"></script>
+  <title>Staff Handbook | Blossom Vale</title><meta name="robots" content="noindex,nofollow"><link rel="canonical" href="https://blossomvale.world/handbook">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="page-shell">
+    <header class="site-header bar board" data-static><div class="board-top" aria-hidden="true"></div><div class="board-body"><a class="bar-brand" href="./"><img src="./flower-small.png?v=4" alt="" draggable="false"><span>Blossom Vale</span></a><nav class="bar-nav" aria-label="Main navigation"><a href="./wiki"><img src="./icon-book.png?v=4" alt="" draggable="false"><span>Wiki</span></a></nav></div><div class="board-bottom" aria-hidden="true"></div></header>
+    <main class="apps-admin-main" id="main">
+      <section class="board apps-admin-hero"><div class="board-top" aria-hidden="true"></div><div class="board-body"><p class="apps-eyebrow">✿ Team only ✿</p><h1>Staff Handbook</h1><p>Log in with Discord to read it. Only the Blossom Vale staff team can open the handbook.</p></div><div class="board-bottom" aria-hidden="true"></div></section>
+      <section class="board apps-admin-login" aria-label="Staff sign in"><div class="board-top" aria-hidden="true"></div><div class="board-body">
+        <a id="staff-login" class="apps-button" href="#">Log in with Discord</a>
+        <button id="staff-sign-out" class="apps-button apps-button-secondary" type="button" hidden>Sign out</button>
+        <p id="staff-auth-status" class="apps-status" role="status" aria-live="polite">Checking…</p>
+      </div><div class="board-bottom" aria-hidden="true"></div></section>
+      <div id="handbook" class="handbook" hidden>
+        <nav class="handbook-contents" aria-label="Contents"><h2>Contents</h2><ul id="handbook-contents"></ul></nav>
+        <article id="handbook-text" class="handbook-text"></article>
+      </div>
+    </main>
+    <footer class="site-footer"><span>Made with <b aria-label="love">♥</b> in Blossom Vale</span><span class="legal-links"><a href="./">Home</a><a href="./privacy">Privacy</a><a href="./">Back Home</a></span></footer>
+  </div>
+</body>
+</html>
